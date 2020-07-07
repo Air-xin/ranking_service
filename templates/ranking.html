@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>排行榜服务</title>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <style>
+        body{
+            background-color: blanchedalmond;
+        }
+        #submit_element,#get_ranking,#show_res{
+            padding: 100px 10%;
+        }
+        #show_res{
+            position: relative;
+            left: 200px;
+            top: -80px;
+            /* display: none */
+        }
+    </style>
+</head>
+<body>
+    <div id="submit_element">
+        客户端号：<input type="text" placeholder='请输入客户端号' id="user_num">&nbsp;&nbsp;&nbsp;
+        分数：<input type="text" placeholder='请输入分数1-10000000' id="sub_score">&nbsp;&nbsp;&nbsp;
+        <button id="submit_btn">提交</button>
+    </div>
+
+    <div id="get_ranking">
+        客户端号：<input type="text" placeholder='请输入客户端号' id="user_num_2"><br>
+        排行范围：
+        <input type="text" id="num1">&nbsp;~&nbsp;<input type="text" id="num2">&nbsp;&nbsp;
+        <button id="get_ranking_btn">查看排名</button>
+    </div>
+
+    <div id="show_res">
+        <table border="1" style="font-size: 30px;" id="show_table">
+            <tr>
+                <td>排名</td>
+                <td>客户端</td>
+                <td>分数</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        $(function(){
+            $('#show_res').hide()
+            var user_num = $('#user_num')
+            var sub_score = $('#sub_score')
+            var submit_btn = $('#submit_btn')
+            // 信息提交
+            submit_btn.click(function(){
+                var user_num_val = user_num.val()
+                var sub_score_val = sub_score.val()
+                if(!user_num_val|!sub_score_val){
+                    alert('不能为空')
+                }else{
+                    $.ajax({
+                        url:'v1/ranking_service',
+                        type:'post',
+                        contentType: 'application/json',
+                        data:JSON.stringify({'user':user_num_val,'score':sub_score_val}),
+                        success:function(res){
+                            if(res.code == 200){
+                                alert(res.msg)
+                            }else{
+                                alert(res.error)
+                            }
+                        }
+                    })
+                }
+            })
+
+            var user_num_2 = $('#user_num_2')
+            var num1 = $('#num1')
+            var num2 = $('#num2')
+            var get_ranking_btn = $('#get_ranking_btn')
+            // 查看排行
+            get_ranking_btn.click(function(){
+                var user_num_val = user_num_2.val()
+                var num1_val = num1.val()
+                var num2_val = num2.val()
+                var show_table = $('#show_table')
+                show_table.html('<tr><td>排名</td><td>客户端</td><td>分数</td></tr>')
+                if (!user_num_val){
+                    alert('请输入客户端号')
+                }else{
+                    $.ajax({
+                        url:'v1/ranking_service',
+                        type:'get',
+                        data:{'user':user_num_val,'num1':num1_val,'num2':num2_val},
+                        success:function(res){
+                            if(res.code != 200){
+                                alert(res.error)
+                            }else{
+                                $('#show_res').show()
+                                $.each(res.data,function(i,j){
+                                    html = ''
+                                    html += '<tr><td>' + j.rank + '</td>'
+                                    html += '<td>' + j.user + '</td>'
+                                    html += '<td>' + j.score + '</td></tr>'
+                                    show_table.append(html)
+                                })
+                                show_table.append('<tr><td>' + res.target_user.rank + '</td><td>' + res.target_user.user + '</td><td>' + res.target_user.score + '</td></tr>')
+                            }
+                        }
+                    })
+                }
+            })
+
+
+        })
+    </script>
+
+
+
+
+</body>
+</html>
